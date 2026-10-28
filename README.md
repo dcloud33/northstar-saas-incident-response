@@ -23,3 +23,25 @@ Simulate an application failure, verify the service becomes unavailable, restore
 an HTTP 200 response with the expected content through Nginx, and record the elapsed recovery time
 Backend is not directly accessible from external networks
 
+## Application Verification
+
+
+### Test 1: Flask Health Endpoint
+
+**Objective:** Verify that the Flask application responds
+successfully to an HTTP health-check request.
+
+**Command:**
+`curl -i http://1127.0.0.1:5001/health`
+
+**Expected Results:**
+- HTTP status code: 200
+- Content-Type: application/json
+- Response body: {"status": "healthy"}
+
+**Actual Results:**
+- HTTP status code: 200
+- Content-Type: application/json
+- Response body: {"status":"healthy"}
+
+**Test Status:** PASSED
