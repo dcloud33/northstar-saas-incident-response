@@ -69,3 +69,73 @@ responds to an HTTP health-check request and run 2 Gunicorn workers.
 - Nginx hasn't been configured, so customer-facing access through the reverse proxy hasn't been verified.
 - Gunicorn isn't managed by systemd yet.
 - Monitoring and service recovery haven't been tested.
+
+## Nginx Reverse Proxy Deployment
+
+## Purpose
+Nginx receives HTTP requests and forwards them accordingly
+### Configuration Location
+```bash
+ /etc/nginx/sites-available/northstar
+```
+### Deployment Procedure
+Copy git-tracked configuration into nginx sites-available directory:
+```bash
+sudo cp infr/nginx/northstar.conf /etc/nginx/sites-available/northstar
+```
+Create a symbolic link:
+```bash
+sudo ln -s /etc/nginx/sites-available/northstar /etc/nginx/sites-enabled/northstar
+```
+Disable the default site:
+```bash
+sudo unlink /etc/nginx/sites-enabled/default
+```
+Validate Configuration:
+```bash
+sudo nginx -t
+```
+Reload Nginx:
+```bash
+sudo systemctl reload nginx
+```
+Verify application through /health:
+```bash
+curl -i http://127.0.0.1/health
+```
+### Configuration Validation
+
+Check for any difference from original file copied:
+```bas
+diff -u /etc/nginx/sites-available/northstar infra/nginx/northstar.conf
+```
+Validate the configuration:
+```bash
+sudo nginx -t
+```
+### Application Verification
+Validate Application:
+```bash
+curl -i http://127.0.0.1/health
+```
+### Rollback Procedure
+Remove the Northstar symbolic link from sites-enabled:
+```bash
+sudo unlink /etc/nginx/sites-enabled/northstar
+```
+Recreating the original default site's symbolic link:
+```bash
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+```
+Validate the configuration:
+```bash
+sudo nginx -t
+```
+Reload Nginx:
+```bash
+sudo sytemctl reload nginx
+```
+Verify the Results:
+```bash
+curl -i http://127.0.0.1/
+```
