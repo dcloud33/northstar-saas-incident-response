@@ -29,7 +29,7 @@ Backend is not directly accessible from external networks
 successfully to an HTTP health-check request.
 
 **Command:**
-`curl -i http://1127.0.0.1:5001/health`
+`curl -i http://127.0.0.1:5001/health`
 
 **Expected Results:**
 - HTTP status code: 200
@@ -65,10 +65,17 @@ responds to an HTTP health-check request and run 2 Gunicorn workers.
 **Test status:** PASSED
 
 
-**Limitations:**
+**Limitations at the Time of Test 2(Historical):**
 - Nginx hasn't been configured, so customer-facing access through the reverse proxy hasn't been verified.
 - Gunicorn isn't managed by systemd yet.
 - Monitoring and service recovery haven't been tested.
+
+**Current Implementaton Status**
+- Nginx reverse proxy configured and verified to forward HTTP requests to Gunicorn.
+- Gunicorn managed by systemd, with automatic recovery successfully tested
+- Python health monitoring implemented and tested.
+- State transitions and observed recovery intervals and state changes actively monitored and verified.
+- Operational notifications and automated regress tests still pending
 
 ## Nginx Reverse Proxy Deployment
 
@@ -81,7 +88,7 @@ Nginx receives HTTP requests and forwards them accordingly
 ### Deployment Procedure
 Copy git-tracked configuration into nginx sites-available directory:
 ```bash
-sudo cp infr/nginx/northstar.conf /etc/nginx/sites-available/northstar
+sudo cp infra/nginx/northstar.conf /etc/nginx/sites-available/northstar
 ```
 Create a symbolic link:
 ```bash
@@ -119,6 +126,10 @@ Validate Application:
 curl -i http://127.0.0.1/health
 ```
 ### Rollback Procedure
+Scope: Revert the active Nginx configuration to the default site, disabling the custom reverse-proxy routing to the Northstar application.
+Impact: Northstar becomes inaccessible throug its configured Nginx entry point on port 80 because requests are no longer forwarded to Gunicorn.
+Nginx continues accepting HTTP requests and may serve its default website, while Gunicorn backend can remain operational on its internal listenting port.
+
 Remove the Northstar symbolic link from sites-enabled:
 ```bash
 sudo unlink /etc/nginx/sites-enabled/northstar
@@ -133,9 +144,9 @@ sudo nginx -t
 ```
 Reload Nginx:
 ```bash
-sudo sytemctl reload nginx
+sudo systemctl reload nginx
 ```
 Verify the Results:
 ```bash
-curl -i http://127.0.0.1/
+curl -i http://127.0.0.1/health
 ```
